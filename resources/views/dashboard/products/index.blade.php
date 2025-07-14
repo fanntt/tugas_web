@@ -56,7 +56,7 @@
                         <form action="{{ route('admin.products.delete', $product) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
+                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this product? This action cannot be undone.')"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>

@@ -37,7 +37,7 @@
                         <form action="{{ route('admin.categories.delete', $category) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure? This will also delete all products in this category.')"><i class="fas fa-trash"></i></button>
+                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this category? All products in this category will also be deleted. This action cannot be undone.')"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>

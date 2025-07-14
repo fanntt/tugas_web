@@ -42,7 +42,7 @@
                             <a href="{{ route('orders.edit', $order) }}" class="text-yellow-600 hover:text-yellow-900 mr-2">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
-                            <form action="{{ route('orders.delete', $order) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
+                            <form action="{{ route('orders.delete', $order) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this order? This action cannot be undone.')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900">

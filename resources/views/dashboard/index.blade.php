@@ -13,7 +13,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 w-full">
         <!-- Total Products -->
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
@@ -82,30 +82,6 @@
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
                     <a href="{{ route('orders.index') }}" class="font-medium text-yellow-700 hover:text-yellow-900">View all orders</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- My Orders -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                            <i class="fas fa-list text-white text-sm"></i>
-                        </div>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">My Orders</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $userOrders }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-5 py-3">
-                <div class="text-sm">
-                    <a href="{{ route('orders.my-orders') }}" class="font-medium text-purple-700 hover:text-purple-900">View my orders</a>
                 </div>
             </div>
         </div>

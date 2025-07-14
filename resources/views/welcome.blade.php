@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Welcome - Irfan Store')
+@section('title', 'Welcome - Online Store')
 
 @section('content')
 <div class="relative overflow-hidden">
@@ -10,7 +10,7 @@
             <div class="text-center">
                 <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl">
                     <span class="block">Welcome to</span>
-                    <span class="block text-primary-200">Irfan Store</span>
+                    <span class="block text-primary-200">Online Store</span>
                 </h1>
                 <p class="mt-3 max-w-md mx-auto text-base text-primary-100 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
                 </p>

@@ -194,4 +194,14 @@ Route::middleware(['auth'])->group(function () {
         $products = \App\Models\IrfanProduct::all();
         return view('dashboard.products.user-index', compact('products'));
     })->name('user.products.index');
+
+    // Tambahkan route detail produk user
+    Route::get('/products-user/{product}', function ($product) {
+        if (Auth::user()->role !== 'user') {
+            abort(403, 'Unauthorized.');
+        }
+        $productModel = \App\Models\IrfanProduct::findOrFail($product);
+        $productModel->load('category');
+        return view('dashboard.products.user-show', compact('productModel'));
+    })->name('user.products.show');
 });
