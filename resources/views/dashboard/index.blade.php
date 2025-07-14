@@ -33,7 +33,7 @@
             </div>
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
-                    <a href="{{ route('products.index') }}" class="font-medium text-blue-700 hover:text-blue-900">View all products</a>
+                    <a href="{{ route('admin.products.index') }}" class="font-medium text-blue-700 hover:text-blue-900">View all products</a>
                 </div>
             </div>
         </div>
@@ -57,7 +57,7 @@
             </div>
             <div class="bg-gray-50 px-5 py-3">
                 <div class="text-sm">
-                    <a href="{{ route('categories.index') }}" class="font-medium text-green-700 hover:text-green-900">View all categories</a>
+                    <a href="{{ route('admin.categories.index') }}" class="font-medium text-green-700 hover:text-green-900">View all categories</a>
                 </div>
             </div>
         </div>
@@ -181,7 +181,7 @@
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <a href="{{ route('categories.create') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
+                <a href="{{ route('admin.categories.create') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
                     <div>
                         <span class="rounded-lg inline-flex p-3 bg-primary-50 text-primary-700 ring-4 ring-white">
                             <i class="fas fa-plus text-lg"></i>
@@ -199,7 +199,7 @@
                     </span>
                 </a>
 
-                <a href="{{ route('products.create') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
+                <a href="{{ route('admin.products.create') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
                     <div>
                         <span class="rounded-lg inline-flex p-3 bg-green-50 text-green-700 ring-4 ring-white">
                             <i class="fas fa-box text-lg"></i>
@@ -235,7 +235,7 @@
                     </span>
                 </a>
 
-                <a href="{{ route('categories.index') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
+                <a href="{{ route('admin.categories.index') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
                     <div>
                         <span class="rounded-lg inline-flex p-3 bg-purple-50 text-purple-700 ring-4 ring-white">
                             <i class="fas fa-tags text-lg"></i>
@@ -253,7 +253,7 @@
                     </span>
                 </a>
 
-                <a href="{{ route('products.index') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
+                <a href="{{ route('admin.products.index') }}" class="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-primary-300">
                     <div>
                         <span class="rounded-lg inline-flex p-3 bg-red-50 text-red-700 ring-4 ring-white">
                             <i class="fas fa-cogs text-lg"></i>

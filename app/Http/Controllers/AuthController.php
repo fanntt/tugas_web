@@ -39,7 +39,7 @@ class AuthController extends Controller
             if ($user->role === 'admin') {
                 return redirect()->intended(route('admin.dashboard'));
             } else {
-                return redirect()->intended(route('orders.index'));
+                return redirect()->intended(route('user.products.index'));
             }
         }
 
@@ -72,7 +72,7 @@ class AuthController extends Controller
         if ($user->role === 'admin') {
             return redirect(route('admin.dashboard'));
         } else {
-            return redirect(route('orders.index'));
+            return redirect(route('user.products.index'));
         }
     }
 

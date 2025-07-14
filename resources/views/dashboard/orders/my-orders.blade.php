@@ -6,6 +6,9 @@
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900">My Orders</h1>
     <p class="mt-1 text-sm text-gray-500">View all your order history and current orders.</p>
+    <a href="{{ route('orders.create') }}" class="mt-4 inline-block bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-150 ease-in-out">
+        <i class="fas fa-plus mr-1"></i> Create Order
+    </a>
 </div>
 
 <div class="bg-white shadow rounded-lg overflow-x-auto">

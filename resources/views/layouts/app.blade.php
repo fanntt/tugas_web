@@ -39,17 +39,23 @@
                             }
                         }
                     @endphp
-                    <a href="{{ $logoUrl }}" class="flex-shrink-0 flex items-center">
-                        <i class="fas fa-shopping-cart text-primary-600 text-2xl mr-2"></i>
-                        <span class="text-xl font-bold text-gray-900">Irfan Store</span>
-                    </a>
+                    @if(Auth::check())
+                        <span class="text-xl font-bold text-gray-900">Hello, {{ Auth::user()->name }}</span>
+                    @else
+                        <a href="{{ $logoUrl }}" class="flex-shrink-0 flex items-center">
+                            <i class="fas fa-shopping-cart text-primary-600 text-2xl mr-2"></i>
+                            <span class="text-xl font-bold text-gray-900">Irfan Store</span>
+                        </a>
+                    @endif
                 </div>
 
                 <div class="flex items-center space-x-4">
                     @auth
-                        <div class="relative">
-                            <span class="text-gray-700">{{ Auth::user()->name }}</span>
-                        </div>
+                        @if(Auth::user()->role === 'user')
+                            <a href="{{ route('orders.my-orders') }}" class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-lg" title="My Orders">
+                                <i class="fas fa-shopping-cart"></i>
+                            </a>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
                             <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-150 ease-in-out">
@@ -72,38 +78,37 @@
     <!-- Sidebar and Main Content -->
     @auth
     <div class="flex">
-        <!-- Sidebar -->
-        <div class="w-64 bg-white shadow-lg min-h-screen">
+        <!-- Sidebar Toggle Button (visible only for admin) -->
+        @if(Auth::user() && Auth::user()->role === 'admin')
+        <button id="sidebar-toggle" class="fixed top-20 left-2 z-30 bg-primary-600 text-white p-2 rounded-lg shadow-lg focus:outline-none lg:hidden">
+            <i class="fas fa-bars"></i>
+        </button>
+        @endif
+        <!-- Sidebar (only for admin) -->
+        @if(Auth::user() && Auth::user()->role === 'admin')
+        <div id="sidebar" class="w-64 bg-white shadow-lg min-h-screen transition-transform duration-300 lg:translate-x-0 translate-x-0 lg:static fixed z-20">
             <div class="p-4">
                 <nav class="space-y-2">
-                    @if(Auth::user() && Auth::user()->role === 'admin')
-                        <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('admin.dashboard') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-tachometer-alt mr-3"></i>
-                            Dashboard
-                        </a>
-                        <a href="{{ route('admin.categories.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('admin.categories.*') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-tags mr-3"></i>
-                            Categories
-                        </a>
-                        <a href="{{ route('admin.products.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('admin.products.*') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-box mr-3"></i>
-                            Products
-                        </a>
-                    @endif
-                    @if(Auth::user() && Auth::user()->role === 'user')
-                        <a href="{{ route('orders.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('orders.*') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-shopping-bag mr-3"></i>
-                            Orders
-                        </a>
-                        <a href="{{ route('orders.my-orders') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('orders.my-orders') ? 'bg-primary-50 text-primary-600' : '' }}">
-                            <i class="fas fa-list mr-3"></i>
-                            My Orders
-                        </a>
-                    @endif
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('admin.dashboard') ? 'bg-primary-50 text-primary-600' : '' }}">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('admin.categories.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('admin.categories.*') ? 'bg-primary-50 text-primary-600' : '' }}">
+                        <i class="fas fa-tags mr-3"></i>
+                        Categories
+                    </a>
+                    <a href="{{ route('admin.products.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('admin.products.*') ? 'bg-primary-50 text-primary-600' : '' }}">
+                        <i class="fas fa-box mr-3"></i>
+                        Products
+                    </a>
+                    <a href="{{ route('orders.index') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition duration-150 ease-in-out {{ request()->routeIs('orders.*') ? 'bg-primary-50 text-primary-600' : '' }}">
+                        <i class="fas fa-shopping-bag mr-3"></i>
+                        Orders
+                    </a>
                 </nav>
             </div>
         </div>
-
+        @endif
         <!-- Main Content -->
         <div class="flex-1 p-8">
             @if(session('success'))
@@ -136,5 +141,24 @@
             </p>
         </div>
     </footer>
+
+    <script>
+    // Sidebar toggle for admin
+    document.addEventListener('DOMContentLoaded', function() {
+        var sidebar = document.getElementById('sidebar');
+        var toggle = document.getElementById('sidebar-toggle');
+        if (toggle && sidebar) {
+            toggle.addEventListener('click', function() {
+                if (sidebar.classList.contains('translate-x-0')) {
+                    sidebar.classList.remove('translate-x-0');
+                    sidebar.classList.add('-translate-x-64');
+                } else {
+                    sidebar.classList.remove('-translate-x-64');
+                    sidebar.classList.add('translate-x-0');
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>

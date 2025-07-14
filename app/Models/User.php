@@ -48,8 +48,8 @@ class User extends Authenticatable
         ];
     }
 
-    public function orders(): HasMany
+    public function orders()
     {
-        return $this->hasMany(IrfanOrder::class);
+        return $this->hasMany(\App\Models\IrfanOrder::class, 'user_id');
     }
 }

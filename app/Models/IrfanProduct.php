@@ -13,7 +13,8 @@ class IrfanProduct extends Model
         'description',
         'price',
         'stock',
-        'irfan_category_id'
+        'category_id',
+        'image', // tambahkan kolom image
     ];
 
     protected $casts = [

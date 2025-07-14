@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -64,7 +65,7 @@ class DashboardController extends Controller
         ]);
 
         IrfanCategory::create($request->all());
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil ditambahkan');
+        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil ditambahkan');
     }
 
     public function editCategory(IrfanCategory $category)
@@ -86,7 +87,7 @@ class DashboardController extends Controller
         ]);
 
         $category->update($request->all());
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui');
+        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diperbarui');
     }
 
     public function deleteCategory(IrfanCategory $category)
@@ -95,7 +96,7 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized.');
         }
         $category->delete();
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus');
+        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil dihapus');
     }
 
     // Products
@@ -127,11 +128,23 @@ class DashboardController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'irfan_category_id' => 'required|exists:irfan_categories,id'
+            'irfan_category_id' => 'required|exists:irfan_categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
-        IrfanProduct::create($request->all());
-        return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan');
+        $data = $request->all();
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products', 'public');
+            // Debug: cek path image
+            Log::info('Image uploaded:', ['path' => $data['image']]);
+        } else {
+            Log::warning('No image uploaded');
+        }
+        $product = IrfanProduct::create($data);
+        if (empty($product->image)) {
+            return redirect()->back()->withInput()->withErrors(['image' => 'Gambar tidak tersimpan.']);
+        }
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan');
     }
 
     public function editProduct(IrfanProduct $product)
@@ -153,11 +166,22 @@ class DashboardController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'irfan_category_id' => 'required|exists:irfan_categories,id'
+            'irfan_category_id' => 'required|exists:irfan_categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
-        $product->update($request->all());
-        return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui');
+        $data = $request->all();
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products', 'public');
+            Log::info('Image uploaded (update):', ['path' => $data['image']]);
+        } else {
+            Log::warning('No image uploaded (update)');
+        }
+        $product->update($data);
+        if (empty($product->image)) {
+            return redirect()->back()->withInput()->withErrors(['image' => 'Gambar tidak tersimpan.']);
+        }
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui');
     }
 
     public function deleteProduct(IrfanProduct $product)
@@ -166,7 +190,16 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized.');
         }
         $product->delete();
-        return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus');
+    }
+
+    public function showProduct(IrfanProduct $product)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+        $product->load('category');
+        return view('dashboard.products.show', compact('product'));
     }
 
     // Orders (user)
@@ -175,13 +208,14 @@ class DashboardController extends Controller
         if (Auth::user()->role !== 'user') {
             abort(403, 'Unauthorized.');
         }
-        $orders = IrfanOrder::with(['user', 'orderItems.product'])->get();
+        // Hanya order milik user yang login
+        $orders = Auth::user()->orders()->with(['user', 'orderItems.product'])->get();
         return view('dashboard.orders.index', compact('orders'));
     }
 
     public function createOrder()
     {
-        if (Auth::user()->role !== 'user') {
+        if (!in_array(Auth::user()->role, ['admin', 'user'])) {
             abort(403, 'Unauthorized.');
         }
         $users = User::all();
@@ -191,7 +225,7 @@ class DashboardController extends Controller
 
     public function storeOrder(Request $request)
     {
-        if (Auth::user()->role !== 'user') {
+        if (!in_array(Auth::user()->role, ['admin', 'user'])) {
             abort(403, 'Unauthorized.');
         }
         $request->validate([
@@ -203,13 +237,9 @@ class DashboardController extends Controller
             'status' => 'required|in:pending,completed,cancelled',
             'notes' => 'nullable|string'
         ]);
-
         DB::beginTransaction();
         try {
-            // Generate order number
             $orderNumber = 'ORD-' . date('Ymd') . '-' . str_pad(IrfanOrder::count() + 1, 4, '0', STR_PAD_LEFT);
-
-            // Create order
             $order = IrfanOrder::create([
                 'order_number' => $orderNumber,
                 'user_id' => $request->user_id,
@@ -217,10 +247,7 @@ class DashboardController extends Controller
                 'notes' => $request->notes,
                 'total_amount' => 0
             ]);
-
             $totalAmount = 0;
-
-            // Create order items
             foreach ($request->products as $index => $productId) {
                 if (!empty($productId) && isset($request->quantities[$index])) {
                     $product = IrfanProduct::find($productId);
@@ -228,7 +255,6 @@ class DashboardController extends Controller
                     $price = $product->price;
                     $subtotal = $price * $quantity;
                     $totalAmount += $subtotal;
-
                     $order->orderItems()->create([
                         'irfan_product_id' => $productId,
                         'quantity' => $quantity,
@@ -237,10 +263,7 @@ class DashboardController extends Controller
                     ]);
                 }
             }
-
-            // Update order total
             $order->update(['total_amount' => $totalAmount]);
-
             DB::commit();
             return redirect()->route('orders.index')->with('success', 'Order berhasil dibuat');
         } catch (\Exception $e) {
@@ -251,7 +274,11 @@ class DashboardController extends Controller
 
     public function showOrder(IrfanOrder $order)
     {
-        if (Auth::user()->role !== 'user') {
+        if (!in_array(Auth::user()->role, ['admin', 'user'])) {
+            abort(403, 'Unauthorized.');
+        }
+        // User hanya boleh akses order miliknya, admin boleh akses semua
+        if (Auth::user()->role === 'user' && $order->user_id !== Auth::id()) {
             abort(403, 'Unauthorized.');
         }
         $order->load(['user', 'orderItems.product']);
@@ -260,7 +287,11 @@ class DashboardController extends Controller
 
     public function editOrder(IrfanOrder $order)
     {
-        if (Auth::user()->role !== 'user') {
+        if (!in_array(Auth::user()->role, ['admin', 'user'])) {
+            abort(403, 'Unauthorized.');
+        }
+        // User hanya boleh edit order miliknya, admin boleh edit semua
+        if (Auth::user()->role === 'user' && $order->user_id !== Auth::id()) {
             abort(403, 'Unauthorized.');
         }
         $users = User::all();
@@ -271,7 +302,11 @@ class DashboardController extends Controller
 
     public function updateOrder(Request $request, IrfanOrder $order)
     {
-        if (Auth::user()->role !== 'user') {
+        if (!in_array(Auth::user()->role, ['admin', 'user'])) {
+            abort(403, 'Unauthorized.');
+        }
+        // User hanya boleh update order miliknya, admin boleh update semua
+        if (Auth::user()->role === 'user' && $order->user_id !== Auth::id()) {
             abort(403, 'Unauthorized.');
         }
         $request->validate([
@@ -283,22 +318,15 @@ class DashboardController extends Controller
             'status' => 'required|in:pending,completed,cancelled',
             'notes' => 'nullable|string'
         ]);
-
         DB::beginTransaction();
         try {
-            // Update order basic info
             $order->update([
                 'user_id' => $request->user_id,
                 'status' => $request->status,
                 'notes' => $request->notes
             ]);
-
-            // Delete existing order items
             $order->orderItems()->delete();
-
             $totalAmount = 0;
-
-            // Create new order items
             foreach ($request->products as $index => $productId) {
                 if (!empty($productId) && isset($request->quantities[$index])) {
                     $product = IrfanProduct::find($productId);
@@ -306,7 +334,6 @@ class DashboardController extends Controller
                     $price = $product->price;
                     $subtotal = $price * $quantity;
                     $totalAmount += $subtotal;
-
                     $order->orderItems()->create([
                         'irfan_product_id' => $productId,
                         'quantity' => $quantity,
@@ -315,10 +342,7 @@ class DashboardController extends Controller
                     ]);
                 }
             }
-
-            // Update order total
             $order->update(['total_amount' => $totalAmount]);
-
             DB::commit();
             return redirect()->route('orders.index')->with('success', 'Order berhasil diperbarui');
         } catch (\Exception $e) {
@@ -329,7 +353,11 @@ class DashboardController extends Controller
 
     public function deleteOrder(IrfanOrder $order)
     {
-        if (Auth::user()->role !== 'user') {
+        if (!in_array(Auth::user()->role, ['admin', 'user'])) {
+            abort(403, 'Unauthorized.');
+        }
+        // User hanya boleh hapus order miliknya, admin boleh hapus semua
+        if (Auth::user()->role === 'user' && $order->user_id !== Auth::id()) {
             abort(403, 'Unauthorized.');
         }
         $order->delete();
@@ -343,5 +371,138 @@ class DashboardController extends Controller
         }
         $orders = Auth::user()->orders()->with('orderItems.product')->get();
         return view('dashboard.orders.my-orders', compact('orders'));
+    }
+
+    // Orders (admin)
+    public function adminOrders()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+        $orders = IrfanOrder::with(['user', 'orderItems.product'])->get();
+        return view('dashboard.orders.index', compact('orders'));
+    }
+
+    public function adminShowOrder(IrfanOrder $order)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized.');
+        }
+        $order->load(['user', 'orderItems.product']);
+        return view('dashboard.orders.show', compact('order'));
+    }
+
+    public function adminEditOrder(IrfanOrder $order)
+    {
+        if (Auth::user()->role !== 'admin') abort(403, 'Unauthorized.');
+        $users = User::all();
+        $products = IrfanProduct::all();
+        $order->load('orderItems');
+        return view('dashboard.orders.edit', compact('order', 'users', 'products'));
+    }
+
+    public function adminUpdateOrder(Request $request, IrfanOrder $order)
+    {
+        if (Auth::user()->role !== 'admin') abort(403, 'Unauthorized.');
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'products' => 'required|array|min:1',
+            'products.*' => 'required|exists:irfan_products,id',
+            'quantities' => 'required|array|min:1',
+            'quantities.*' => 'required|integer|min:1',
+            'status' => 'required|in:pending,completed,cancelled',
+            'notes' => 'nullable|string'
+        ]);
+        DB::beginTransaction();
+        try {
+            $order->update([
+                'user_id' => $request->user_id,
+                'status' => $request->status,
+                'notes' => $request->notes
+            ]);
+            $order->orderItems()->delete();
+            $totalAmount = 0;
+            foreach ($request->products as $index => $productId) {
+                if (!empty($productId) && isset($request->quantities[$index])) {
+                    $product = IrfanProduct::find($productId);
+                    $quantity = $request->quantities[$index];
+                    $price = $product->price;
+                    $subtotal = $price * $quantity;
+                    $totalAmount += $subtotal;
+                    $order->orderItems()->create([
+                        'irfan_product_id' => $productId,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'subtotal' => $subtotal
+                    ]);
+                }
+            }
+            $order->update(['total_amount' => $totalAmount]);
+            DB::commit();
+            return redirect()->route('orders.index')->with('success', 'Order berhasil diperbarui');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat memperbarui order']);
+        }
+    }
+
+    public function adminDeleteOrder(IrfanOrder $order)
+    {
+        if (Auth::user()->role !== 'admin') abort(403, 'Unauthorized.');
+        $order->delete();
+        return redirect()->route('orders.index')->with('success', 'Order berhasil dihapus');
+    }
+
+    public function adminCreateOrder() {
+        if (Auth::user()->role !== 'admin') abort(403, 'Unauthorized.');
+        $users = User::all();
+        $products = IrfanProduct::all();
+        return view('dashboard.orders.create', compact('users', 'products'));
+    }
+
+    public function adminStoreOrder(Request $request) {
+        if (Auth::user()->role !== 'admin') abort(403, 'Unauthorized.');
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'products' => 'required|array|min:1',
+            'products.*' => 'required|exists:irfan_products,id',
+            'quantities' => 'required|array|min:1',
+            'quantities.*' => 'required|integer|min:1',
+            'status' => 'required|in:pending,completed,cancelled',
+            'notes' => 'nullable|string'
+        ]);
+        DB::beginTransaction();
+        try {
+            $orderNumber = 'ORD-' . date('Ymd') . '-' . str_pad(IrfanOrder::count() + 1, 4, '0', STR_PAD_LEFT);
+            $order = IrfanOrder::create([
+                'order_number' => $orderNumber,
+                'user_id' => $request->user_id,
+                'status' => $request->status,
+                'notes' => $request->notes,
+                'total_amount' => 0
+            ]);
+            $totalAmount = 0;
+            foreach ($request->products as $index => $productId) {
+                if (!empty($productId) && isset($request->quantities[$index])) {
+                    $product = IrfanProduct::find($productId);
+                    $quantity = $request->quantities[$index];
+                    $price = $product->price;
+                    $subtotal = $price * $quantity;
+                    $totalAmount += $subtotal;
+                    $order->orderItems()->create([
+                        'irfan_product_id' => $productId,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'subtotal' => $subtotal
+                    ]);
+                }
+            }
+            $order->update(['total_amount' => $totalAmount]);
+            DB::commit();
+            return redirect()->route('orders.index')->with('success', 'Order berhasil dibuat');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat order']);
+        }
     }
 }

@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-2xl mx-auto bg-white shadow rounded-lg p-8">
     <h1 class="text-2xl font-bold mb-6">Edit Product</h1>
-    <form action="{{ route('products.update', $product) }}" method="POST">
+    <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <div class="mb-4">
@@ -53,8 +53,17 @@
                 <span class="text-red-500 text-xs">{{ $message }}</span>
             @enderror
         </div>
+        <div class="mb-4">
+            <label for="image">Product Image</label>
+            <input type="file" name="image" id="image" accept="image/*">
+            @if($product->image)
+                <div>
+                    <img src="{{ asset('storage/' . $product->image) }}" alt="Current Image" style="max-width:150px;max-height:150px;">
+                </div>
+            @endif
+        </div>
         <div class="flex justify-end space-x-3">
-            <a href="{{ route('products.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition duration-150 ease-in-out">
+            <a href="{{ route('admin.products.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition duration-150 ease-in-out">
                 Cancel
             </a>
             <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition duration-150 ease-in-out">
